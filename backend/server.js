@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -20,9 +21,15 @@ app.get('/', (req, res) => {
   res.send('Exam Scheduler API Running');
 });
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
-  .catch((err) => console.log(err));
+async function startServer() {
+  const mongod = await MongoMemoryServer.create();
+  const uri = mongod.getUri();
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  await mongoose.connect(uri);
+  console.log('MongoDB Connected (In-Memory)');
+
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+startServer();
